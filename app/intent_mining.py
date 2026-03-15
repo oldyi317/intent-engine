@@ -310,6 +310,8 @@ class IntentLogger:
 
     def __init__(self, db_path: str = "intent_history.db"):
         self.db_path = db_path
+        # Ensure parent directory exists (e.g. data/ may not exist on Render)
+        os.makedirs(os.path.dirname(self.db_path) or '.', exist_ok=True)
         self._init_db()
 
     def _init_db(self):
