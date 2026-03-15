@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>富邦金控 - 客戶意圖分類系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #1a56db;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a5f;
+            --svm-green: #10b981;
+            --bert-blue: #3b82f6;
+            --llm-purple: #8b5cf6;
+            --fallback-orange: #f97316;
+            --risk-red: #ef4444;
+            --cross-sell-amber: #f59e0b;
+            --retention-blue: #3b82f6;
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 240px;
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+        }
+
+        /* ━━━━━━━━━ SIDEBAR ━━━━━━━━━ */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 0;
+        }
+
+        .sidebar-item {
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--text);
+            user-select: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f8fafc;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            border-left-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .sidebar-item-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        /* ━━━━━━━━━ MAIN LAYOUT ━━━━━━━━━ */
+        .main-wrapper {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online { background: var(--svm-green); }
+
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ━━━━━━━━━ COMMON STYLES ━━━━━━━━━ */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-body { padding: 20px; }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-field {
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus { border-color: var(--primary-light); }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover { background: var(--primary-light); }
+
+        .btn-secondary {
+            background: #f8fafc;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover { background: #f1f5f9; }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+
+        /* ━━━━━━━━━ PAGE 1: LIVE PREDICTION ━━━━━━━━━ */
+        .prediction-section {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .input-area {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .input-field-large {
+            flex: 1;
+        }
+
+        .stats-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .flow-diagram {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .flow-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            padding: 16px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .flow-step-active {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .flow-step-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--text-light);
+            flex: 0;
+        }
+
+        .result-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tier-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .tier-svm { background: #d1fae5; color: var(--svm-green); }
+        .tier-bert { background: #dbeafe; color: var(--bert-blue); }
+        .tier-llm { background: #f3e8ff; color: var(--llm-purple); }
+        .tier-fallback { background: #fed7aa; color: var(--fallback-orange); }
+
+        .confidence-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+            background: var(--primary);
+        }
+
+        .meta-info {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .sub-intents {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .sub-intent-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .loading { display: none; }
+        .loading.active {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .placeholder {
+            color: var(--text-light);
+            font-size: 14px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 240px;
+        }
+
+        /* ━━━━━━━━━ PAGE 2: CUSTOMER MINING ━━━━━━━━━ */
+        .mining-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .mining-controls input {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .timeline-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .timeline {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            padding: 16px;
+        }
+
+        .timeline-item {
+            padding: 12px;
+            border-left: 3px solid var(--primary);
+            margin-bottom: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timeline-item:hover {
+            box-shadow: 0 2px 8px rgba(59,130,246,0.1);
+        }
+
+        .timeline-time {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .timeline-intent {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .alerts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .alert-card {
+            border-radius: 10px;
+            padding: 16px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-risk {
+            background: #fef2f2;
+            border-color: var(--risk-red);
+        }
+
+        .alert-cross-sell {
+            background: #fffbeb;
+            border-color: var(--cross-sell-amber);
+        }
+
+        .alert-retention {
+            background: #eff6ff;
+            border-color: var(--retention-blue);
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .alert-header {
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-description {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .product-recommendation {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .product-return {
+            color: var(--svm-green);
+            font-weight: 600;
+        }
+
+        .batch-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .batch-table th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .batch-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .batch-table tr:hover { background: #f8fafc; }
+
+        /* ━━━━━━━━━ PAGE 3: SYSTEM MONITOR ━━━━━━━━━ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card-large {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-card-large .stat-value {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .model-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .info-item {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .info-label {
+            color: var(--text-light);
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .architecture-diagram {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .architecture-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .architecture-box {
+            flex: 1;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .architecture-box.svm {
+            border-color: var(--svm-green);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .architecture-box.bert {
+            border-color: var(--bert-blue);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .architecture-box.decision {
+            border-color: var(--primary);
+            background: rgba(26, 86, 219, 0.05);
+        }
+
+        .architecture-box.llm {
+            border-color: var(--llm-purple);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .architecture-icon { font-size: 28px; margin-bottom: 8px; }
+        .architecture-title { font-weight: 700; margin-bottom: 4px; }
+        .architecture-desc { font-size: 12px; color: var(--text-light); }
+        .architecture-arrow { font-size: 20px; color: var(--text-light); flex: 0; }
+
+        /* ━━━━━━━━━ LLM MODE TOGGLE ━━━━━━━━━ */
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .mode-btn {
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .mode-btn.llm-mode.active {
+            background: var(--llm-purple);
+            border-color: var(--llm-purple);
+        }
+
+        /* ━━━━━━━━━ LLM COMPARISON CARD ━━━━━━━━━ */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .comparison-result {
+            background: #f8fafc;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .comparison-result.svm {
+            border-color: var(--svm-green);
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .comparison-result.llm {
+            border-color: var(--llm-purple);
+            background: rgba(139, 92, 246, 0.03);
+        }
+
+        .comparison-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .agreement-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .agreement-match {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--svm-green);
+        }
+
+        .agreement-diff {
+            background: rgba(249, 115, 22, 0.2);
+            color: var(--fallback-orange);
+        }
+
+        /* ━━━━━━━━━ LLM REASONING BOX ━━━━━━━━━ */
+        .reasoning-box {
+            background: #f3e8ff;
+            border-left: 4px solid var(--llm-purple);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        /* ━━━━━━━━━ LLM STATS CARD ━━━━━━━━━ */
+        .llm-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .llm-stat-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 2px solid var(--llm-purple);
+            text-align: center;
+        }
+
+        .llm-stat-card .stat-value {
+            color: var(--llm-purple);
+            font-size: 28px;
+        }
+
+        .llm-stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .cache-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .cache-fill {
+            height: 100%;
+            background: var(--llm-purple);
+            border-radius: 3px;
+        }
+
+        /* ━━━━━━━━━ LLM DEEP ANALYSIS ━━━━━━━━━ */
+        .llm-analysis-card {
+            background: #f3e8ff;
+            border: 2px solid var(--llm-purple);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .llm-analysis-header {
+            font-weight: 700;
+            color: var(--llm-purple);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .llm-disabled {
+            background: #f1f5f9;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 13px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* ━━━━━━━━━ RESPONSIVE ━━━━━━━━━ */
+        @media (max-width: 1024px) {
+            .sidebar { width: 200px; }
+            :root { --sidebar-width: 200px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .timeline-container { grid-template-columns: 1fr; }
+            .comparison-container { grid-template-columns: 1fr; }
+            .llm-stats-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 160px; }
+            :root { --sidebar-width: 160px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .input-row { flex-direction: column; }
+            .input-field-large { width: 100%; }
+            .prediction-section { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .mode-toggle { flex-wrap: wrap; }
+            .comparison-container { grid-template-columns: 1fr; }
+            .llm-stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ━━━━━━━━━ SIDEBAR ━━━━━━━━━ -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2>富邦金控</h2>
+        <p>意圖分類系統</p>
+    </div>
+    <div class="sidebar-nav">
+        <div class="sidebar-item active" onclick="switchPage('live-prediction')">
+            <span class="sidebar-item-icon">⚡</span>
+            <span>即時預測</span>
+        </div>
+        <div class="sidebar-item" onclick="switchPage('customer-mining')">
+            <span class="sidebar-item-icon">🔍</span>
+            <span>客戶意圖挖掘</span>
+        </div>
+        <div class="sidebar-item" onclick="switchPage('system-monitor')">
+            <span class="sidebar-item-icon">📊</span>
+            <span>系統監控</span>
+        </div>
+    </div>
+    <div class="sidebar-footer">
+        <div id="sidebarStatus">連線中...</div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━ MAIN WRAPPER ━━━━━━━━━ -->
+<div class="main-wrapper">
+    <!-- Header -->
+    <div class="header">
+        <h1>客戶意圖分類系統 v4</h1>
+        <div class="status-badge">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">檢查連線中...</span>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+        <!-- ═══════════════ PAGE 1: 即時預測 ═══════════════ -->
+        <div class="page active" id="live-prediction">
+            <div class="input-area">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="modeSvm" onclick="switchMode('svm')">⚡ SVM 智慧路由</button>
+                    <button class="mode-btn" id="modeLlm" onclick="switchMode('llm')">🤖 LLM 直接分類</button>
+                    <button class="mode-btn" id="modeCompare" onclick="switchMode('compare')">⚙️ 傳統 vs LLM 比較</button>
+                </div>
+                <div class="input-row">
+                    <input type="text" class="input-field input-field-large" id="queryInput"
+                           placeholder="輸入客戶查詢文字，例如：what is my bank balance"
+                           onkeydown="if(event.key==='Enter') predict()">
+                    <input type="text" class="input-field" id="customerIdInput"
+                           placeholder="客戶 ID（選填）" style="width: 150px;">
+                    <button class="btn btn-primary" onclick="predict()">🔍 分析</button>
+                </div>
+            </div>
+
+            <div class="prediction-section">
+                <div>
+                    <div class="flow-diagram" id="flowDiagram">
+                        <div class="flow-steps">
+                            <div class="flow-step">
+                                <div class="flow-step-icon">📝</div>
+                                <div>輸入文字</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-step flow-step-active" id="flowSvm">
+                                <div class="flow-step-icon">⚡</div>
+                                <div>SVM 層</div>
+                            </div>
+                            <div class="flow-arrow" id="arrowToResult">→</div>
+                            <div class="flow-step" id="flowResult">
+                                <div class="flow-step-icon">✓</div>
+                                <div>結果</div>
+                            </div>
+                        </div>
+                        <div class="flow-steps" id="flowLlm" style="display:none; margin-top: 16px;">
+                            <div class="flow-step">
+                                <div class="flow-step-icon">📝</div>
+                                <div>輸入文字</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-step flow-step-active">
+                                <div class="flow-step-icon">🤖</div>
+                                <div>Claude LLM</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-step">
+                                <div class="flow-step-icon">✓</div>
+                                <div>結果</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">分析結果</div>
+                        <div class="card-body">
+                            <div class="loading" id="loading"><div class="spinner"></div><span>分析中...</span></div>
+                            <div id="resultArea" class="placeholder">輸入文字後點擊「分析」查看結果</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right side stats -->
+                <div class="session-stats">
+                    <div class="stats-card">
+                        <div class="stat-value" id="sessionRequests">0</div>
+                        <div class="stat-label">本次請求數</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stat-value" id="sessionSvmRatio">0%</div>
+                        <div class="stat-label">SVM 比例</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stat-value" id="sessionAvgLatency">—</div>
+                        <div class="stat-label">平均延遲</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stat-value" id="sessionTotalCost">$0</div>
+                        <div class="stat-label">本次成本</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sessionDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ PAGE 2: 客戶意圖挖掘 ═══════════════ -->
+        <div class="page" id="customer-mining">
+            <div class="card">
+                <div class="card-header">客戶意圖挖掘</div>
+                <div class="card-body">
+                    <div class="mining-controls">
+                        <input type="text" class="input-field" id="miningCustomerId"
+                               placeholder="輸入客戶 ID，例如 CUST001"
+                               onkeydown="if(event.key==='Enter') analyzeCustomer()">
+                        <input type="number" class="input-field" id="miningDays" value="30" min="1" max="365"
+                               placeholder="天數" style="width: 100px;">
+                        <button class="btn btn-primary btn-sm" onclick="analyzeCustomer()">分析單客</button>
+                        <button class="btn btn-primary btn-sm" onclick="analyzeLlmHiddenIntents()" style="background: var(--llm-purple); border-color: var(--llm-purple);">🤖 LLM 深度分析</button>
+                        <button class="btn btn-secondary btn-sm" onclick="batchAnalyze()">批次掃描全部</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="singleCustomerView" style="margin-top: 24px;">
+                <div class="timeline-container">
+                    <div>
+                        <h3 style="margin-bottom: 12px; font-size: 14px; font-weight: 600;">🕐 意圖歷史</h3>
+                        <div class="timeline" id="intentTimeline">
+                            <div class="placeholder">輸入客戶 ID 後查看意圖歷史</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 12px; font-size: 14px; font-weight: 600;">🎯 觸發規則與機會</h3>
+                        <div class="alerts-container" id="alertsContainer">
+                            <div class="placeholder">輸入客戶 ID 後查看相關規則</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="llmAnalysisContainer" style="margin-top: 16px;"></div>
+            </div>
+
+            <div id="batchResultView" style="display: none; margin-top: 24px;">
+                <div class="card">
+                    <div class="card-header">全客戶掃描結果</div>
+                    <div class="card-body">
+                        <div class="loading" id="batchLoading"><div class="spinner"></div><span>掃描中...</span></div>
+                        <div id="batchTableContainer" style="overflow-x: auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ PAGE 3: 系統監控 ═══════════════ -->
+        <div class="page" id="system-monitor">
+            <div class="stats-grid">
+                <div class="stat-card-large">
+                    <div class="stat-value" id="totalRequests">—</div>
+                    <div class="stat-label">總請求數</div>
+                </div>
+                <div class="stat-card-large">
+                    <div class="stat-value" id="svmRatio">—</div>
+                    <div class="stat-label">SVM 處理比例</div>
+                </div>
+                <div class="stat-card-large">
+                    <div class="stat-value" id="avgLatency">—</div>
+                    <div class="stat-label">平均延遲 (ms)</div>
+                </div>
+                <div class="stat-card-large">
+                    <div class="stat-value" id="totalCost">—</div>
+                    <div class="stat-label">總成本</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">模型信息</div>
+                <div class="card-body">
+                    <div class="model-info">
+                        <div class="info-item">
+                            <div class="info-label">模型狀態</div>
+                            <div class="info-value" id="modelStatus">檢查中...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">載入的模型</div>
+                            <div class="info-value" id="modelType">—</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">特徵數量</div>
+                            <div class="info-value" id="featureCount">—</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">LLM 狀態</div>
+                            <div class="info-value" id="llmStatus">檢查中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="llmStatsContainer" style="display: none;">
+                <div class="card-header">🤖 LLM 使用統計</div>
+                <div class="card-body">
+                    <div class="llm-stats-grid">
+                        <div class="llm-stat-card">
+                            <div class="stat-value" id="llmTotalCalls">0</div>
+                            <div class="llm-stat-label">總調用次數</div>
+                        </div>
+                        <div class="llm-stat-card">
+                            <div class="stat-value" id="llmCacheHitRate">0%</div>
+                            <div class="llm-stat-label">快取命中率</div>
+                            <div class="cache-bar">
+                                <div class="cache-fill" id="llmCacheBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="llm-stat-card">
+                            <div class="stat-value" id="llmTotalTokens">0</div>
+                            <div class="llm-stat-label">總 Token 數</div>
+                        </div>
+                        <div class="llm-stat-card">
+                            <div class="stat-value" id="llmTotalCost">$0</div>
+                            <div class="llm-stat-label">總成本</div>
+                        </div>
+                    </div>
+                    <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                        <div style="font-size: 12px; color: var(--text-light);">
+                            <div style="margin-bottom: 4px;">⏱️ 平均延遲: <strong id="llmAvgLatency">—</strong> ms</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="llmDisabledContainer" style="display: none;">
+                <div class="card-body">
+                    <div class="llm-disabled">
+                        <div style="font-size: 18px; margin-bottom: 8px;">⚠️</div>
+                        LLM 未啟用（需設定 ANTHROPIC_API_KEY）
+                    </div>
+                </div>
+            </div>
+
+            <div class="architecture-diagram">
+                <h3 style="margin-bottom: 20px; font-size: 14px; font-weight: 600;">🏗️ 三層路由架構</h3>
+                <div class="architecture-flow">
+                    <div class="architecture-box">
+                        <div class="architecture-icon">📥</div>
+                        <div class="architecture-title">客戶提問</div>
+                        <div class="architecture-desc">百萬級日均通訊量</div>
+                    </div>
+                    <div class="architecture-arrow">→</div>
+                    <div class="architecture-box svm">
+                        <div class="architecture-icon">⚡</div>
+                        <div class="architecture-title">SVM 輕量層</div>
+                        <div class="architecture-desc">&lt;5ms / 免費 / ~80% 流量</div>
+                    </div>
+                    <div class="architecture-arrow">→</div>
+                    <div class="architecture-box bert">
+                        <div class="architecture-icon">🧠</div>
+                        <div class="architecture-title">BERT 重量層</div>
+                        <div class="architecture-desc">~50ms / GPU / ~10% 流量</div>
+                    </div>
+                    <div class="architecture-arrow">→</div>
+                    <div class="architecture-box llm">
+                        <div class="architecture-icon">🤖</div>
+                        <div class="architecture-title">Claude LLM</div>
+                        <div class="architecture-desc">深度分析 / 複雜推理 / ~10% 流量</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="card">
+                    <div class="card-header">意圖分佈</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="intentDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">領域分佈</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="domainDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+
+let charts = {};
+let sessionData = {
+    requests: 0,
+    svmCount: 0,
+    bertCount: 0,
+    llmCount: 0,
+    totalLatency: 0,
+    totalCost: 0,
+    intents: {}
+};
+
+let currentMode = 'svm'; // 'svm', 'llm', or 'compare'
+let llmAvailable = false;
+
+// ━━━━━━━━━ INITIALIZATION ━━━━━━━━━
+window.addEventListener('load', () => {
+    checkHealth();
+    loadSystemStats();
+    initCharts();
+    setInterval(checkHealth, 30000);
+});
+
+// ━━━━━━━━━ NAVIGATION ━━━━━━━━━
+function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+
+    document.getElementById(pageId).classList.add('active');
+    event.target.closest('.sidebar-item').classList.add('active');
+
+    if (pageId === 'system-monitor') {
+        loadSystemStats();
+    }
+}
+
+// ━━━━━━━━━ HEALTH CHECK ━━━━━━━━━
+async function checkHealth() {
+    try {
+        const res = await fetch(`${API_BASE}/health`);
+        const data = await res.json();
+
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const sidebarStatus = document.getElementById('sidebarStatus');
+        const llmStatusEl = document.getElementById('llmStatus');
+
+        if (data.status === 'healthy' || data.status === 'ok') {
+            statusDot.classList.add('online');
+            statusText.textContent = data.model_type ? `✓ 已載入 (${data.model_type})` : '✓ 系統就緒';
+            sidebarStatus.textContent = '✓ 已連線';
+        } else {
+            statusDot.classList.remove('online');
+            statusText.textContent = '✗ 系統離線';
+            sidebarStatus.textContent = '✗ 離線';
+        }
+
+        // Check LLM availability
+        llmAvailable = data.llm_available || false;
+        if (llmStatusEl) {
+            llmStatusEl.textContent = llmAvailable ? '✓ 已啟用' : '✗ 未啟用';
+        }
+    } catch (err) {
+        document.getElementById('statusDot').classList.remove('online');
+        document.getElementById('statusText').textContent = '✗ 無法連線';
+        document.getElementById('sidebarStatus').textContent = '✗ 無法連線';
+    }
+}
+
+// ━━━━━━━━━ PAGE 1: MODE SWITCHING ━━━━━━━━━
+function switchMode(mode) {
+    currentMode = mode;
+
+    // Update button states
+    document.getElementById('modeSvm').classList.remove('active');
+    document.getElementById('modeLlm').classList.remove('active');
+    document.getElementById('modeCompare').classList.remove('active');
+
+    if (mode === 'svm') {
+        document.getElementById('modeSvm').classList.add('active');
+        document.getElementById('flowDiagram').querySelector('.flow-steps').style.display = 'flex';
+        document.getElementById('flowLlm').style.display = 'none';
+    } else if (mode === 'llm') {
+        if (!llmAvailable) {
+            alert('LLM 未啟用（需設定 ANTHROPIC_API_KEY）');
+            switchMode('svm');
+            return;
+        }
+        document.getElementById('modeLlm').classList.add('active');
+        document.getElementById('flowDiagram').querySelector('.flow-steps').style.display = 'none';
+        document.getElementById('flowLlm').style.display = 'flex';
+    } else if (mode === 'compare') {
+        if (!llmAvailable) {
+            alert('LLM 未啟用（需設定 ANTHROPIC_API_KEY）');
+            switchMode('svm');
+            return;
+        }
+        document.getElementById('modeCompare').classList.add('active');
+        document.getElementById('flowDiagram').querySelector('.flow-steps').style.display = 'none';
+        document.getElementById('flowLlm').style.display = 'none';
+    }
+}
+
+// ━━━━━━━━━ PAGE 1: LIVE PREDICTION ━━━━━━━━━
+async function predict() {
+    const text = document.getElementById('queryInput').value.trim();
+    const customerId = document.getElementById('customerIdInput').value.trim();
+
+    if (!text) {
+        alert('請輸入查詢文字');
+        return;
+    }
+
+    const resultArea = document.getElementById('resultArea');
+    const loading = document.getElementById('loading');
+
+    loading.classList.add('active');
+    resultArea.innerHTML = '';
+
+    try {
+        if (currentMode === 'svm') {
+            await predictWithSvm(text, customerId, resultArea);
+        } else if (currentMode === 'llm') {
+            await predictWithLlm(text, customerId, resultArea);
+        } else if (currentMode === 'compare') {
+            await predictWithComparison(text, customerId, resultArea);
+        }
+    } catch (err) {
+        resultArea.innerHTML = `<div class="placeholder">❌ 錯誤：${err.message}</div>`;
+    } finally {
+        loading.classList.remove('active');
+    }
+}
+
+async function predictWithSvm(text, customerId, resultArea) {
+    const body = { text, customer_id: customerId || null };
+    const startTime = Date.now();
+
+    const res = await fetch(`${API_BASE}/predict/smart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    const latency = Date.now() - startTime;
+
+    // Update session data
+    sessionData.requests++;
+    sessionData.totalLatency += latency;
+    sessionData.totalCost += parseFloat(data.cost_estimate || 0);
+
+    if (data.tier === 'svm') {
+        sessionData.svmCount++;
+    } else if (data.tier === 'bert') {
+        sessionData.bertCount++;
+    }
+
+    if (data.intent) {
+        sessionData.intents[data.intent] = (sessionData.intents[data.intent] || 0) + 1;
+    }
+
+    // Update flow diagram
+    updateFlowDiagram(data);
+
+    // Display result
+    renderResult(data, latency);
+
+    // Update session stats
+    updateSessionStats();
+
+    // Log to backend
+    if (customerId) {
+        await fetch(`${API_BASE}/intent-log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customer_id: customerId,
+                intent: data.intent,
+                confidence: data.confidence,
+                original_text: data.original_text
+            })
+        });
+    }
+}
+
+async function predictWithLlm(text, customerId, resultArea) {
+    const body = { text, two_stage: false };
+    const startTime = Date.now();
+
+    const res = await fetch(`${API_BASE}/predict/llm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `API Error: ${res.status}`);
+    }
+
+    const data = await res.json();
+    const latency = Date.now() - startTime;
+
+    // Update session data
+    sessionData.requests++;
+    sessionData.llmCount++;
+    sessionData.totalLatency += latency;
+    sessionData.totalCost += parseFloat(data.cost_usd || 0);
+
+    if (data.intents) {
+        data.intents.forEach(i => {
+            sessionData.intents[i.intent] = (sessionData.intents[i.intent] || 0) + 1;
+        });
+    }
+
+    // Display result
+    renderLlmResult(data, latency);
+
+    // Update session stats
+    updateSessionStats();
+
+    // Log all intents to backend
+    if (customerId && data.intents) {
+        for (const item of data.intents) {
+            await fetch(`${API_BASE}/intent-log`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customer_id: customerId,
+                    intent: item.intent,
+                    confidence: item.confidence,
+                    original_text: text,
+                })
+            });
+        }
+    }
+}
+
+async function predictWithComparison(text, customerId, resultArea) {
+    const body = { text };
+    const startTime = Date.now();
+
+    const res = await fetch(`${API_BASE}/compare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `API Error: ${res.status}`);
+    }
+
+    const data = await res.json();
+    const latency = Date.now() - startTime;
+
+    // Update session data
+    sessionData.requests++;
+    sessionData.svmCount++;
+    sessionData.llmCount++;
+    sessionData.totalLatency += latency;
+    sessionData.totalCost += parseFloat(data.traditional?.cost_usd || 0) + parseFloat(data.llm?.cost_usd || 0);
+
+    // 記錄所有辨識到的意圖
+    const allIntents = [...(data.traditional?.intents || []), ...(data.llm?.intents || [])];
+    allIntents.forEach(i => {
+        sessionData.intents[i.intent] = (sessionData.intents[i.intent] || 0) + 1;
+    });
+
+    // Display comparison result
+    renderComparisonResult(data, latency);
+
+    // Update session stats
+    updateSessionStats();
+
+    // Log all LLM intents to backend
+    if (customerId && data.llm?.intents) {
+        for (const item of data.llm.intents) {
+            await fetch(`${API_BASE}/intent-log`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customer_id: customerId,
+                    intent: item.intent,
+                    confidence: item.confidence,
+                    original_text: text,
+                })
+            });
+        }
+    }
+}
+
+function updateFlowDiagram(data) {
+    const flowSvm = document.getElementById('flowSvm');
+    const flowResult = document.getElementById('flowResult');
+    const arrowToResult = document.getElementById('arrowToResult');
+
+    flowSvm.classList.remove('flow-step-active');
+    flowResult.classList.remove('flow-step-active');
+
+    if (data.tier === 'bert') {
+        flowResult.classList.add('flow-step-active');
+        flowResult.innerHTML = `<div class="flow-step-icon">🧠</div><div>BERT 層</div>`;
+    } else {
+        flowSvm.classList.add('flow-step-active');
+        flowResult.innerHTML = `<div class="flow-step-icon">✓</div><div>結果</div>`;
+    }
+}
+
+function renderResult(data, latency) {
+    const resultArea = document.getElementById('resultArea');
+    let html = `
+        <div class="result-card">
+            <div class="result-header">
+                <span style="font-weight: 700; color: var(--primary);">${data.intent}</span>
+                <span class="tier-badge tier-${data.tier}">${data.tier.toUpperCase()}</span>
+            </div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" style="width: ${Math.min(data.confidence * 100, 100)}%;
+                    background: ${getColorByConfidence(data.confidence)};"></div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-light); margin-bottom: 8px;">
+                信心度: ${(data.confidence * 100).toFixed(1)}%
+            </div>
+            <div class="meta-info">
+                <div>⏱️ ${latency}ms</div>
+                <div>💰 $${parseFloat(data.cost_estimate || 0).toFixed(4)}</div>
+                <div>${data.is_compound ? '🔗 複合意圖' : '✓ 單一意圖'}</div>
+            </div>
+    `;
+
+    if (data.sub_intents && data.sub_intents.length > 0) {
+        html += `<div class="sub-intents">`;
+        data.sub_intents.forEach(sub => {
+            html += `
+                <div class="sub-intent-item">
+                    <div style="font-weight: 600;">◆ ${sub.intent}</div>
+                    <div>信心度: ${(sub.confidence * 100).toFixed(0)}%</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    if (data.routing_reason) {
+        html += `<div style="margin-top: 12px; padding: 8px 12px; background: #f8fafc; border-radius: 6px; font-size: 12px; color: var(--text-light);">📌 ${data.routing_reason}</div>`;
+    }
+
+    html += `</div>`;
+    resultArea.innerHTML = html;
+}
+
+function renderLlmResult(data, latency) {
+    const resultArea = document.getElementById('resultArea');
+    const intents = data.intents || [];
+    const count = intents.length;
+
+    let html = `
+        <div class="result-card">
+            <div class="result-header">
+                <span style="font-weight: 700; color: var(--llm-purple);">🤖 LLM 辨識出 ${count} 個意圖</span>
+                <span class="tier-badge tier-llm">LLM</span>
+            </div>
+            <div style="margin: 12px 0;">
+    `;
+
+    intents.forEach((item, idx) => {
+        const conf = ((item.confidence || 0) * 100).toFixed(0);
+        const barColor = item.confidence >= 0.9 ? 'var(--svm-green)' : item.confidence >= 0.7 ? 'var(--bert-blue)' : 'var(--cross-sell-amber)';
+        html += `
+            <div style="padding: 10px 14px; margin-bottom: 8px; background: #f8fafc; border-radius: 8px; border-left: 4px solid ${barColor};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-weight: 600; color: var(--llm-purple);">${idx + 1}. ${item.intent}</span>
+                    <span style="font-size: 12px; color: var(--text-light);">${item.domain || ''}</span>
+                </div>
+                <div class="confidence-bar" style="margin: 4px 0;">
+                    <div class="confidence-fill" style="width: ${Math.min(conf, 100)}%; background: ${barColor};"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light);">
+                    <span>信心度: ${conf}%</span>
+                    <span>${item.evidence || ''}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `
+            </div>
+            <div class="meta-info">
+                <div>⏱️ ${latency}ms</div>
+                <div>💰 $${parseFloat(data.cost_usd || 0).toFixed(4)}</div>
+                <div>📊 ${data.input_tokens || 0} + ${data.output_tokens || 0} tokens</div>
+            </div>
+        </div>
+    `;
+
+    resultArea.innerHTML = html;
+}
+
+function renderComparisonResult(data, latency) {
+    const resultArea = document.getElementById('resultArea');
+    const tradIntents = data.traditional?.intents || [];
+    const llmIntents = data.llm?.intents || [];
+    const tradTier = data.traditional?.tier || 'svm';
+    const routingReason = data.traditional?.routing_reason || '';
+
+    // 顯示每個意圖用了哪一層
+    function renderTradIntentList(intents) {
+        return intents.map((item, idx) => {
+            const conf = ((item.confidence || 0) * 100).toFixed(0);
+            const tier = item.tier || 'svm';
+            const tierLabel = tier === 'bert' ? '🧠 BERT' : '⚡ SVM';
+            const tierColor = tier === 'bert' ? 'var(--bert-blue)' : 'var(--svm-green)';
+            return `
+                <div style="padding: 6px 10px; margin-bottom: 6px; background: #f8fafc; border-radius: 6px; border-left: 3px solid ${tierColor};">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 12px; color: ${tierColor};">${idx + 1}. ${item.intent}</span>
+                        <span style="font-size: 10px; padding: 1px 6px; border-radius: 4px; background: ${tierColor}; color: white;">${tierLabel}</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-light);">信心度: ${conf}%</div>
+                    ${item.evidence ? `<div style="font-size: 10px; color: #999; margin-top: 2px;">${item.evidence}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderLlmIntentList(intents) {
+        return intents.map((item, idx) => {
+            const conf = ((item.confidence || 0) * 100).toFixed(0);
+            return `
+                <div style="padding: 6px 10px; margin-bottom: 6px; background: #f8fafc; border-radius: 6px; border-left: 3px solid var(--llm-purple);">
+                    <div style="font-weight: 600; font-size: 12px; color: var(--llm-purple);">${idx + 1}. ${item.intent}</div>
+                    <div style="font-size: 11px; color: var(--text-light);">信心度: ${conf}% | ${item.domain || ''}</div>
+                    ${item.evidence ? `<div style="font-size: 10px; color: #999; margin-top: 2px;">${item.evidence}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    const tierDisplay = tradTier === 'bert' ? '🧠 SVM→BERT' : '⚡ SVM';
+
+    let html = `
+        <div class="comparison-container">
+            <div class="comparison-result svm">
+                <div class="comparison-title">${tierDisplay} 傳統分類器（${tradIntents.length} 個意圖）</div>
+                ${renderTradIntentList(tradIntents)}
+                <div style="font-size: 11px; color: var(--text-light); margin-top: 8px;">
+                    延遲: ${data.traditional?.latency_ms || 0}ms | 成本: $${(data.traditional?.cost_usd || 0).toFixed(4)}
+                </div>
+                ${routingReason ? `<div style="font-size: 10px; color: #999; margin-top: 4px;">📋 ${routingReason}</div>` : ''}
+            </div>
+            <div class="comparison-result llm">
+                <div class="comparison-title">🤖 Claude LLM（${llmIntents.length} 個意圖）</div>
+                ${renderLlmIntentList(llmIntents)}
+                <div style="font-size: 11px; color: var(--text-light); margin-top: 8px;">
+                    延遲: ${data.llm?.latency_ms || 0}ms | 成本: $${(data.llm?.cost_usd || 0).toFixed(4)}
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 12px;">
+            <span class="agreement-badge ${tradIntents.length === llmIntents.length ? 'agreement-match' : 'agreement-diff'}">
+                傳統: ${tradIntents.length} 個 vs LLM: ${llmIntents.length} 個意圖
+            </span>
+        </div>
+    `;
+
+    resultArea.innerHTML = html;
+}
+
+function getColorByConfidence(conf) {
+    if (conf >= 0.8) return 'var(--svm-green)';
+    if (conf >= 0.6) return 'var(--bert-blue)';
+    return 'var(--cross-sell-amber)';
+}
+
+function updateSessionStats() {
+    document.getElementById('sessionRequests').textContent = sessionData.requests;
+    const svmRatio = sessionData.requests > 0
+        ? Math.round((sessionData.svmCount / sessionData.requests) * 100)
+        : 0;
+    document.getElementById('sessionSvmRatio').textContent = svmRatio + '%';
+
+    const avgLatency = sessionData.requests > 0
+        ? Math.round(sessionData.totalLatency / sessionData.requests)
+        : 0;
+    document.getElementById('sessionAvgLatency').textContent = avgLatency + 'ms';
+    document.getElementById('sessionTotalCost').textContent = '$' + sessionData.totalCost.toFixed(2);
+
+    updateSessionDonutChart();
+}
+
+// ━━━━━━━━━ PAGE 2: CUSTOMER MINING ━━━━━━━━━
+async function analyzeCustomer() {
+    const customerId = document.getElementById('miningCustomerId').value.trim();
+    const days = parseInt(document.getElementById('miningDays').value) || 30;
+
+    if (!customerId) {
+        alert('請輸入客戶 ID');
+        return;
+    }
+
+    document.getElementById('singleCustomerView').style.display = 'block';
+    document.getElementById('batchResultView').style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_BASE}/intent-mining/${customerId}?days=${days}`);
+        const data = await res.json();
+
+        // Render intent timeline
+        renderIntentTimeline(data.customer_id, days);
+
+        // Render alerts
+        renderAlerts(data);
+
+    } catch (err) {
+        document.getElementById('alertsContainer').innerHTML = `<div class="placeholder">❌ 錯誤：${err.message}</div>`;
+    }
+}
+
+function renderIntentTimeline(customerId, days) {
+    const timeline = document.getElementById('intentTimeline');
+    let html = '';
+
+    // Fetch intent history
+    fetch(`${API_BASE}/intent-history/${customerId}?days=${days}`)
+        .then(res => res.json())
+        .then(data => {
+            // API 回傳 { customer_id, days, total_records, records: [...] }
+            const items = data.records || data;
+            if (!items || items.length === 0) {
+                timeline.innerHTML = '<div class="placeholder">此客戶在 ' + days + ' 天內無意圖紀錄</div>';
+                return;
+            }
+
+            html = items.map(item => `
+                <div class="timeline-item">
+                    <div class="timeline-time">${new Date(item.timestamp).toLocaleString('zh-TW')}</div>
+                    <div class="timeline-intent">🎯 ${item.intent}
+                        <span style="font-size:11px;color:#64748b;margin-left:6px;">[${item.routing_tier || item.domain || ''}]</span>
+                        <span style="font-size:11px;color:#10b981;margin-left:4px;">conf: ${(item.confidence || 0).toFixed(3)}</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">${item.original_text || ''}</div>
+                </div>
+            `).join('');
+
+            timeline.innerHTML = html;
+        })
+        .catch(err => {
+            timeline.innerHTML = `<div class="placeholder">❌ 無法載入歷史: ${err.message}</div>`;
+        });
+}
+
+function renderAlerts(data) {
+    const container = document.getElementById('alertsContainer');
+    let html = '';
+
+    // 風險警示（紅色）
+    const riskAlerts = data.risk_alerts || [];
+    riskAlerts.forEach(alert => {
+        html += `
+            <div class="alert-card alert-risk">
+                <div class="alert-header">⚠️ 風險警示: ${alert.rule_name || alert.rule_id}</div>
+                <div class="alert-description">${alert.description}</div>
+                <div style="margin-top:6px;font-size:12px;color:#dc2626;">🔧 建議: ${alert.action}</div>
+            </div>
+        `;
+    });
+
+    // 交叉銷售（黃色）— API 回傳 key 是 cross_sell_opportunities
+    const crossSell = data.cross_sell_opportunities || [];
+    crossSell.forEach(insight => {
+        html += `
+            <div class="alert-card alert-cross-sell">
+                <div class="alert-header">💡 行銷機會: ${insight.rule_name || insight.rule_id}</div>
+                <div class="alert-description">${insight.description}</div>
+                <div style="margin-top:6px;font-size:12px;color:#d97706;">🔧 建議: ${insight.action}</div>
+        `;
+        if (insight.products && insight.products.length > 0) {
+            html += `<div style="margin-top: 10px;">`;
+            insight.products.forEach(prod => {
+                html += `
+                    <div class="product-recommendation">
+                        <div class="product-name">📦 ${prod.product}</div>
+                        <div style="font-size: 11px; color: var(--text-light); margin-bottom: 2px;">${prod.description}</div>
+                        <div class="product-return">期望報酬: ${prod.target_return}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+        html += `</div>`;
+    });
+
+    // 流失預警（藍色）— API 回傳 key 是 retention_signals
+    const retention = data.retention_signals || [];
+    retention.forEach(insight => {
+        html += `
+            <div class="alert-card alert-retention">
+                <div class="alert-header">🛡️ 流失預警: ${insight.rule_name || insight.rule_id}</div>
+                <div class="alert-description">${insight.description}</div>
+                <div style="margin-top:6px;font-size:12px;color:#2563eb;">🔧 建議: ${insight.action}</div>
+            </div>
+        `;
+    });
+
+    if (!html) {
+        html = '<div class="placeholder">此客戶目前無觸發任何規則 ✅</div>';
+    }
+
+    container.innerHTML = html;
+}
+
+let _llmAnalyzing = false;
+async function analyzeLlmHiddenIntents() {
+    if (_llmAnalyzing) return;  // 防止重複點擊
+
+    const customerId = document.getElementById('miningCustomerId').value.trim();
+    const days = parseInt(document.getElementById('miningDays').value) || 30;
+
+    if (!customerId) {
+        alert('請輸入客戶 ID');
+        return;
+    }
+
+    if (!llmAvailable) {
+        alert('LLM 未啟用（需設定 ANTHROPIC_API_KEY）');
+        return;
+    }
+
+    _llmAnalyzing = true;
+    const container = document.getElementById('llmAnalysisContainer');
+    container.innerHTML = '<div class="loading" style="display: flex;"><div class="spinner"></div><span>LLM 深度分析中（約 7 秒）...</span></div>';
+
+    try {
+        const res = await fetch(`${API_BASE}/llm/hidden-intents/${customerId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ days })
+        });
+
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `API Error: ${res.status}`);
+        }
+
+        const data = await res.json();
+        renderLlmAnalysis(data);
+
+    } catch (err) {
+        container.innerHTML = `<div class="placeholder">❌ 錯誤：${err.message}</div>`;
+    } finally {
+        _llmAnalyzing = false;
+    }
+}
+
+function renderLlmAnalysis(data) {
+    const container = document.getElementById('llmAnalysisContainer');
+    let html = `<div class="llm-analysis-card">`;
+    html += `<div class="llm-analysis-header">🤖 LLM 深度分析結果</div>`;
+
+    if (data.overall_reasoning) {
+        html += `<div class="reasoning-box">${data.overall_reasoning}</div>`;
+    }
+
+    // Risk Alerts
+    if (data.risk_alerts && data.risk_alerts.length > 0) {
+        html += `<div style="margin-top: 16px;">`;
+        html += `<h4 style="font-weight: 600; color: var(--risk-red); margin-bottom: 8px;">⚠️ 風險警示</h4>`;
+        data.risk_alerts.forEach(alert => {
+            html += `
+                <div class="alert-card alert-risk" style="margin-bottom: 8px;">
+                    <div class="alert-header">${alert.signal || alert.severity}</div>
+                    <div class="alert-description">${alert.evidence || alert.description}</div>
+                    <div style="margin-top: 6px; font-size: 12px; color: #dc2626;">🔧 ${alert.recommended_action || alert.action}</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    // Cross-sell Opportunities
+    if (data.cross_sell_opportunities && data.cross_sell_opportunities.length > 0) {
+        html += `<div style="margin-top: 16px;">`;
+        html += `<h4 style="font-weight: 600; color: var(--cross-sell-amber); margin-bottom: 8px;">💡 交叉銷售機會</h4>`;
+        data.cross_sell_opportunities.forEach(opp => {
+            html += `
+                <div class="alert-card alert-cross-sell" style="margin-bottom: 8px;">
+                    <div class="alert-header">${opp.opportunity || opp.product_suggestion}</div>
+                    <div class="alert-description">${opp.evidence}</div>
+                    <div style="margin-top: 6px; font-size: 12px; color: #d97706;">信心度: ${((opp.confidence || 0) * 100).toFixed(0)}%</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    // Retention Signals
+    if (data.retention_signals && data.retention_signals.length > 0) {
+        html += `<div style="margin-top: 16px;">`;
+        html += `<h4 style="font-weight: 600; color: var(--retention-blue); margin-bottom: 8px;">🛡️ 留存訊號</h4>`;
+        data.retention_signals.forEach(signal => {
+            html += `
+                <div class="alert-card alert-retention" style="margin-bottom: 8px;">
+                    <div class="alert-header">${signal.signal || signal.type}</div>
+                    <div class="alert-description">${signal.description || signal.evidence}</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    // Recommended Actions
+    if (data.recommended_actions && data.recommended_actions.length > 0) {
+        html += `<div style="margin-top: 16px; padding: 12px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border-left: 4px solid var(--llm-purple);">`;
+        html += `<h4 style="font-weight: 600; color: var(--llm-purple); margin-bottom: 8px;">🎯 建議行動</h4>`;
+        data.recommended_actions.forEach((action, idx) => {
+            html += `<div style="font-size: 13px; color: var(--text); margin-bottom: 4px;">${idx + 1}. ${action}</div>`;
+        });
+        html += `</div>`;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+async function batchAnalyze() {
+    document.getElementById('singleCustomerView').style.display = 'none';
+    document.getElementById('batchResultView').style.display = 'block';
+    const batchLoading = document.getElementById('batchLoading');
+    const batchContainer = document.getElementById('batchTableContainer');
+
+    batchLoading.classList.add('active');
+
+    try {
+        const res = await fetch(`${API_BASE}/intent-mining?days=30`);
+        const data = await res.json();
+
+        if (data.customers.length === 0) {
+            batchContainer.innerHTML = '<div class="placeholder">無客戶資料</div>';
+        } else {
+            let html = `<table class="batch-table">
+                <thead>
+                    <tr>
+                        <th>客戶 ID</th>
+                        <th>互動數</th>
+                        <th>主要意圖</th>
+                        <th>風險警示</th>
+                        <th>行銷機會</th>
+                        <th>留存機會</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.customers.forEach(cust => {
+                const riskCount = (cust.risk_alerts || []).length;
+                const crossCount = (cust.cross_sell_opportunities || []).length;
+                const retentionCount = (cust.retention_signals || []).length;
+                const mainIntent = cust.intent_profile && Object.keys(cust.intent_profile).length > 0
+                    ? Object.keys(cust.intent_profile)[0]
+                    : '—';
+
+                html += `
+                    <tr>
+                        <td><strong>${cust.customer_id}</strong></td>
+                        <td>${cust.total_interactions || 0}</td>
+                        <td>${mainIntent}</td>
+                        <td>${riskCount > 0 ? `⚠️ ${riskCount}` : '—'}</td>
+                        <td>${crossCount > 0 ? `💡 ${crossCount}` : '—'}</td>
+                        <td>${retentionCount > 0 ? `🛡️ ${retentionCount}` : '—'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            batchContainer.innerHTML = html;
+        }
+
+    } catch (err) {
+        batchContainer.innerHTML = `<div class="placeholder">❌ 錯誤：${err.message}</div>`;
+    } finally {
+        batchLoading.classList.remove('active');
+    }
+}
+
+// ━━━━━━━━━ PAGE 3: SYSTEM MONITOR ━━━━━━━━━
+async function loadSystemStats() {
+    try {
+        const [routingRes, logStatsRes, healthRes, llmStatsRes] = await Promise.all([
+            fetch(`${API_BASE}/routing-stats`),
+            fetch(`${API_BASE}/intent-log-stats`),
+            fetch(`${API_BASE}/health`),
+            fetch(`${API_BASE}/llm-stats`).catch(() => null)
+        ]);
+
+        const routing = await routingRes.json();
+        const logStats = await logStatsRes.json();
+        const health = await healthRes.json();
+        const llmStats = llmStatsRes ? await llmStatsRes.json() : null;
+
+        // Update routing stats
+        document.getElementById('totalRequests').textContent = routing.total_requests != null ? routing.total_requests : '—';
+        document.getElementById('svmRatio').textContent = routing.svm_ratio != null
+            ? (typeof routing.svm_ratio === 'string' ? routing.svm_ratio : `${(routing.svm_ratio * 100).toFixed(1)}%`)
+            : '—';
+        document.getElementById('avgLatency').textContent = routing.avg_latency_ms != null
+            ? `${Math.round(routing.avg_latency_ms)}`
+            : '—';
+        document.getElementById('totalCost').textContent = `$${(routing.total_cost_usd || 0).toFixed(2)}`;
+
+        // Update health info
+        document.getElementById('modelStatus').textContent = health.status === 'ok' ? '✓ 運行中' : '✗ 離線';
+        document.getElementById('modelType').textContent = health.model_type || '—';
+        document.getElementById('featureCount').textContent = (health.features || []).length + ' 個';
+        const llmStatusEl = document.getElementById('llmStatus');
+        if (llmStatusEl) {
+            llmStatusEl.textContent = health.llm_available ? '✓ 已啟用' : '✗ 未啟用';
+        }
+
+        // Update LLM stats
+        if (llmStats && llmStats.total_calls > 0) {
+            const llmStatsContainer = document.getElementById('llmStatsContainer');
+            const llmDisabledContainer = document.getElementById('llmDisabledContainer');
+
+            llmStatsContainer.style.display = 'block';
+            llmDisabledContainer.style.display = 'none';
+
+            document.getElementById('llmTotalCalls').textContent = llmStats.total_calls || 0;
+            let cacheHitRate = llmStats.cache_hit_rate || '0%';
+            if (typeof cacheHitRate === 'number') cacheHitRate = (cacheHitRate * 100).toFixed(1) + '%';
+            document.getElementById('llmCacheHitRate').textContent = cacheHitRate;
+            document.getElementById('llmCacheBar').style.width = cacheHitRate;
+            document.getElementById('llmTotalTokens').textContent = (llmStats.total_input_tokens || 0) + (llmStats.total_output_tokens || 0);
+            document.getElementById('llmTotalCost').textContent = '$' + (llmStats.total_cost_usd || 0).toFixed(4);
+            document.getElementById('llmAvgLatency').textContent = Math.round(llmStats.avg_latency_ms || 0);
+        } else if (!health.llm_available) {
+            document.getElementById('llmStatsContainer').style.display = 'none';
+            document.getElementById('llmDisabledContainer').style.display = 'block';
+        }
+
+        // Update charts
+        updateIntentDistributionChart(logStats.top_intents);
+
+    } catch (err) {
+        console.error('Failed to load system stats:', err);
+    }
+}
+
+// ━━━━━━━━━ CHARTS ━━━━━━━━━
+function initCharts() {
+    // Session donut chart
+    const ctxDonut = document.getElementById('sessionDonutChart');
+    if (ctxDonut) {
+        charts.sessionDonut = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: ['SVM', 'BERT'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#10b981', '#3b82f6'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+    // Intent distribution bar chart
+    const ctxIntent = document.getElementById('intentDistributionChart');
+    if (ctxIntent) {
+        charts.intentBar = new Chart(ctxIntent, {
+            type: 'bar',
+            data: { labels: [], datasets: [{ label: '次數', data: [], backgroundColor: 'var(--primary-light)' }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    }
+
+    // Domain distribution pie chart
+    const ctxDomain = document.getElementById('domainDistributionChart');
+    if (ctxDomain) {
+        charts.domainPie = new Chart(ctxDomain, {
+            type: 'pie',
+            data: { labels: [], datasets: [{ data: [], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'] }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+}
+
+function updateSessionDonutChart() {
+    if (charts.sessionDonut) {
+        charts.sessionDonut.data.datasets[0].data = [
+            sessionData.svmCount,
+            sessionData.bertCount
+        ];
+        charts.sessionDonut.update();
+    }
+}
+
+function updateIntentDistributionChart(topIntents) {
+    if (charts.intentBar && topIntents) {
+        const labels = topIntents.map(item => item.intent);
+        const data = topIntents.map(item => item.count);
+        charts.intentBar.data.labels = labels;
+        charts.intentBar.data.datasets[0].data = data;
+        charts.intentBar.update();
+    }
+}
+</script>
+
+</body>
+</html>

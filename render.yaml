@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: fubon-intent-engine
+    runtime: python
+    plan: starter  # $7/mo, 1GB RAM — needed for BERT model
+    buildCommand: |
+      pip install -r requirements.txt
+      python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('stopwords')"
+      python download_model.py
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false  # set manually in Render dashboard
+      - key: PYTHON_VERSION
+        value: "3.11.6"
+      - key: PORT
+        value: "10000"

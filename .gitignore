@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables (IMPORTANT: never commit API keys)
+.env
+.env.local
+
+# Model files (too large for git, download at runtime)
+models/bert_intent_classifier/
+models/*.bin
+models/*.pt
+models/*.safetensors
+*.onnx
+
+# Data files (training data, databases — all excluded)
+data/
+*.csv
+*.tsv
+*.json
+*.jsonl
+*.db
+*.sqlite
+*.pkl
+*.pickle
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/

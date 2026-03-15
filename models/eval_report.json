@@ -1,0 +1,1044 @@
+{
+  "overall_accuracy": 0.891,
+  "total_samples": 3000,
+  "total_errors": 327,
+  "domain_accuracy": {
+    "Vehicle": {
+      "accuracy": 0.95,
+      "n_samples": 200,
+      "n_intents": 10
+    },
+    "Entertainment": {
+      "accuracy": 0.9291666666666667,
+      "n_samples": 240,
+      "n_intents": 12
+    },
+    "Travel": {
+      "accuracy": 0.9133333333333333,
+      "n_samples": 300,
+      "n_intents": 15
+    },
+    "Finance": {
+      "accuracy": 0.9121621621621622,
+      "n_samples": 740,
+      "n_intents": 37
+    },
+    "Assistant": {
+      "accuracy": 0.8888888888888888,
+      "n_samples": 540,
+      "n_intents": 27
+    },
+    "Food": {
+      "accuracy": 0.8733333333333333,
+      "n_samples": 300,
+      "n_intents": 15
+    },
+    "Shopping": {
+      "accuracy": 0.86,
+      "n_samples": 100,
+      "n_intents": 5
+    },
+    "Work_HR": {
+      "accuracy": 0.85,
+      "n_samples": 80,
+      "n_intents": 4
+    },
+    "Chitchat": {
+      "accuracy": 0.83,
+      "n_samples": 500,
+      "n_intents": 25
+    }
+  },
+  "top_confusion_pairs": [
+    {
+      "true": "what_is_your_name",
+      "predicted": "user_name",
+      "count": 7
+    },
+    {
+      "true": "change_user_name",
+      "predicted": "user_name",
+      "count": 7
+    },
+    {
+      "true": "insurance",
+      "predicted": "insurance_change",
+      "count": 6
+    },
+    {
+      "true": "order",
+      "predicted": "order_status",
+      "count": 6
+    },
+    {
+      "true": "change_ai_name",
+      "predicted": "change_user_name",
+      "count": 6
+    },
+    {
+      "true": "current_location",
+      "predicted": "share_location",
+      "count": 5
+    },
+    {
+      "true": "restaurant_reviews",
+      "predicted": "restaurant_suggestion",
+      "count": 5
+    },
+    {
+      "true": "todo_list_update",
+      "predicted": "todo_list",
+      "count": 5
+    },
+    {
+      "true": "user_name",
+      "predicted": "what_is_your_name",
+      "count": 5
+    },
+    {
+      "true": "improve_credit_score",
+      "predicted": "credit_score",
+      "count": 4
+    },
+    {
+      "true": "distance",
+      "predicted": "directions",
+      "count": 4
+    },
+    {
+      "true": "todo_list",
+      "predicted": "todo_list_update",
+      "count": 4
+    },
+    {
+      "true": "accept_reservations",
+      "predicted": "restaurant_reservation",
+      "count": 4
+    },
+    {
+      "true": "pto_used",
+      "predicted": "pto_balance",
+      "count": 3
+    },
+    {
+      "true": "shopping_list",
+      "predicted": "shopping_list_update",
+      "count": 3
+    }
+  ],
+  "per_class_report": {
+    "accept_reservations": {
+      "precision": 0.8125,
+      "recall": 0.65,
+      "f1-score": 0.7222222222222222,
+      "support": 20.0
+    },
+    "account_blocked": {
+      "precision": 0.8947368421052632,
+      "recall": 0.85,
+      "f1-score": 0.8717948717948718,
+      "support": 20.0
+    },
+    "alarm": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "application_status": {
+      "precision": 0.9047619047619048,
+      "recall": 0.95,
+      "f1-score": 0.926829268292683,
+      "support": 20.0
+    },
+    "apr": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "are_you_a_bot": {
+      "precision": 0.9473684210526315,
+      "recall": 0.9,
+      "f1-score": 0.9230769230769231,
+      "support": 20.0
+    },
+    "balance": {
+      "precision": 0.8571428571428571,
+      "recall": 0.9,
+      "f1-score": 0.8780487804878049,
+      "support": 20.0
+    },
+    "bill_balance": {
+      "precision": 0.8947368421052632,
+      "recall": 0.85,
+      "f1-score": 0.8717948717948718,
+      "support": 20.0
+    },
+    "bill_due": {
+      "precision": 0.8095238095238095,
+      "recall": 0.85,
+      "f1-score": 0.8292682926829268,
+      "support": 20.0
+    },
+    "book_flight": {
+      "precision": 1.0,
+      "recall": 0.85,
+      "f1-score": 0.918918918918919,
+      "support": 20.0
+    },
+    "book_hotel": {
+      "precision": 0.9411764705882353,
+      "recall": 0.8,
+      "f1-score": 0.8648648648648649,
+      "support": 20.0
+    },
+    "calculator": {
+      "precision": 0.782608695652174,
+      "recall": 0.9,
+      "f1-score": 0.8372093023255814,
+      "support": 20.0
+    },
+    "calendar": {
+      "precision": 0.9375,
+      "recall": 0.75,
+      "f1-score": 0.8333333333333334,
+      "support": 20.0
+    },
+    "calendar_update": {
+      "precision": 0.8636363636363636,
+      "recall": 0.95,
+      "f1-score": 0.9047619047619048,
+      "support": 20.0
+    },
+    "calories": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "cancel": {
+      "precision": 0.782608695652174,
+      "recall": 0.9,
+      "f1-score": 0.8372093023255814,
+      "support": 20.0
+    },
+    "cancel_reservation": {
+      "precision": 0.8181818181818182,
+      "recall": 0.9,
+      "f1-score": 0.8571428571428571,
+      "support": 20.0
+    },
+    "car_rental": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "card_declined": {
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1-score": 0.9523809523809523,
+      "support": 20.0
+    },
+    "carry_on": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "change_accent": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1-score": 0.8888888888888888,
+      "support": 20.0
+    },
+    "change_ai_name": {
+      "precision": 0.8461538461538461,
+      "recall": 0.55,
+      "f1-score": 0.6666666666666666,
+      "support": 20.0
+    },
+    "change_language": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "change_speed": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "change_user_name": {
+      "precision": 0.3333333333333333,
+      "recall": 0.25,
+      "f1-score": 0.2857142857142857,
+      "support": 20.0
+    },
+    "change_volume": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "confirm_reservation": {
+      "precision": 0.9411764705882353,
+      "recall": 0.8,
+      "f1-score": 0.8648648648648649,
+      "support": 20.0
+    },
+    "cook_time": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "credit_limit": {
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1-score": 0.9523809523809523,
+      "support": 20.0
+    },
+    "credit_limit_change": {
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1-score": 0.9,
+      "support": 20.0
+    },
+    "credit_score": {
+      "precision": 0.8260869565217391,
+      "recall": 0.95,
+      "f1-score": 0.8837209302325582,
+      "support": 20.0
+    },
+    "current_location": {
+      "precision": 0.8571428571428571,
+      "recall": 0.6,
+      "f1-score": 0.7058823529411765,
+      "support": 20.0
+    },
+    "damaged_card": {
+      "precision": 0.8260869565217391,
+      "recall": 0.95,
+      "f1-score": 0.8837209302325582,
+      "support": 20.0
+    },
+    "date": {
+      "precision": 0.8695652173913043,
+      "recall": 1.0,
+      "f1-score": 0.9302325581395349,
+      "support": 20.0
+    },
+    "definition": {
+      "precision": 0.9047619047619048,
+      "recall": 0.95,
+      "f1-score": 0.926829268292683,
+      "support": 20.0
+    },
+    "direct_deposit": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "directions": {
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "f1-score": 0.9090909090909091,
+      "support": 20.0
+    },
+    "distance": {
+      "precision": 0.8571428571428571,
+      "recall": 0.6,
+      "f1-score": 0.7058823529411765,
+      "support": 20.0
+    },
+    "do_you_have_pets": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1-score": 0.9473684210526315,
+      "support": 20.0
+    },
+    "exchange_rate": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "expiration_date": {
+      "precision": 0.9333333333333333,
+      "recall": 0.7,
+      "f1-score": 0.8,
+      "support": 20.0
+    },
+    "find_phone": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "flight_status": {
+      "precision": 0.8695652173913043,
+      "recall": 1.0,
+      "f1-score": 0.9302325581395349,
+      "support": 20.0
+    },
+    "flip_coin": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "food_last": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "freeze_account": {
+      "precision": 0.8181818181818182,
+      "recall": 0.9,
+      "f1-score": 0.8571428571428571,
+      "support": 20.0
+    },
+    "fun_fact": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "gas": {
+      "precision": 0.8571428571428571,
+      "recall": 0.9,
+      "f1-score": 0.8780487804878049,
+      "support": 20.0
+    },
+    "gas_type": {
+      "precision": 0.9473684210526315,
+      "recall": 0.9,
+      "f1-score": 0.9230769230769231,
+      "support": 20.0
+    },
+    "goodbye": {
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1-score": 0.9,
+      "support": 20.0
+    },
+    "greeting": {
+      "precision": 0.76,
+      "recall": 0.95,
+      "f1-score": 0.8444444444444444,
+      "support": 20.0
+    },
+    "how_busy": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "how_old_are_you": {
+      "precision": 0.9444444444444444,
+      "recall": 0.85,
+      "f1-score": 0.8947368421052632,
+      "support": 20.0
+    },
+    "improve_credit_score": {
+      "precision": 0.9375,
+      "recall": 0.75,
+      "f1-score": 0.8333333333333334,
+      "support": 20.0
+    },
+    "income": {
+      "precision": 0.8947368421052632,
+      "recall": 0.85,
+      "f1-score": 0.8717948717948718,
+      "support": 20.0
+    },
+    "ingredient_substitution": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1-score": 0.95,
+      "support": 20.0
+    },
+    "ingredients_list": {
+      "precision": 0.8636363636363636,
+      "recall": 0.95,
+      "f1-score": 0.9047619047619048,
+      "support": 20.0
+    },
+    "insurance": {
+      "precision": 0.8125,
+      "recall": 0.65,
+      "f1-score": 0.7222222222222222,
+      "support": 20.0
+    },
+    "insurance_change": {
+      "precision": 0.7692307692307693,
+      "recall": 1.0,
+      "f1-score": 0.8695652173913043,
+      "support": 20.0
+    },
+    "interest_rate": {
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1-score": 0.9523809523809523,
+      "support": 20.0
+    },
+    "international_fees": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "international_visa": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "jump_start": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "last_maintenance": {
+      "precision": 0.9444444444444444,
+      "recall": 0.85,
+      "f1-score": 0.8947368421052632,
+      "support": 20.0
+    },
+    "lost_luggage": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "make_call": {
+      "precision": 0.85,
+      "recall": 0.85,
+      "f1-score": 0.85,
+      "support": 20.0
+    },
+    "maybe": {
+      "precision": 0.8333333333333334,
+      "recall": 0.75,
+      "f1-score": 0.7894736842105263,
+      "support": 20.0
+    },
+    "meal_suggestion": {
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1-score": 0.9523809523809523,
+      "support": 20.0
+    },
+    "meaning_of_life": {
+      "precision": 1.0,
+      "recall": 0.85,
+      "f1-score": 0.918918918918919,
+      "support": 20.0
+    },
+    "measurement_conversion": {
+      "precision": 0.9473684210526315,
+      "recall": 0.9,
+      "f1-score": 0.9230769230769231,
+      "support": 20.0
+    },
+    "meeting_schedule": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "min_payment": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "mpg": {
+      "precision": 0.8695652173913043,
+      "recall": 1.0,
+      "f1-score": 0.9302325581395349,
+      "support": 20.0
+    },
+    "new_card": {
+      "precision": 0.9411764705882353,
+      "recall": 0.8,
+      "f1-score": 0.8648648648648649,
+      "support": 20.0
+    },
+    "next_holiday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "next_song": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1-score": 0.9473684210526315,
+      "support": 20.0
+    },
+    "no": {
+      "precision": 0.875,
+      "recall": 0.7,
+      "f1-score": 0.7777777777777778,
+      "support": 20.0
+    },
+    "nutrition_info": {
+      "precision": 1.0,
+      "recall": 0.65,
+      "f1-score": 0.7878787878787878,
+      "support": 20.0
+    },
+    "oil_change_how": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "oil_change_when": {
+      "precision": 0.8636363636363636,
+      "recall": 0.95,
+      "f1-score": 0.9047619047619048,
+      "support": 20.0
+    },
+    "order": {
+      "precision": 0.7857142857142857,
+      "recall": 0.55,
+      "f1-score": 0.6470588235294118,
+      "support": 20.0
+    },
+    "order_checks": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "order_status": {
+      "precision": 0.7083333333333334,
+      "recall": 0.85,
+      "f1-score": 0.7727272727272727,
+      "support": 20.0
+    },
+    "pay_bill": {
+      "precision": 0.8260869565217391,
+      "recall": 0.95,
+      "f1-score": 0.8837209302325582,
+      "support": 20.0
+    },
+    "payday": {
+      "precision": 0.9333333333333333,
+      "recall": 0.7,
+      "f1-score": 0.8,
+      "support": 20.0
+    },
+    "pin_change": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "play_music": {
+      "precision": 0.8181818181818182,
+      "recall": 0.9,
+      "f1-score": 0.8571428571428571,
+      "support": 20.0
+    },
+    "plug_type": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "pto_balance": {
+      "precision": 0.7916666666666666,
+      "recall": 0.95,
+      "f1-score": 0.8636363636363636,
+      "support": 20.0
+    },
+    "pto_request": {
+      "precision": 0.85,
+      "recall": 0.85,
+      "f1-score": 0.85,
+      "support": 20.0
+    },
+    "pto_request_status": {
+      "precision": 0.7619047619047619,
+      "recall": 0.8,
+      "f1-score": 0.7804878048780488,
+      "support": 20.0
+    },
+    "pto_used": {
+      "precision": 0.9411764705882353,
+      "recall": 0.8,
+      "f1-score": 0.8648648648648649,
+      "support": 20.0
+    },
+    "recipe": {
+      "precision": 0.85,
+      "recall": 0.85,
+      "f1-score": 0.85,
+      "support": 20.0
+    },
+    "redeem_rewards": {
+      "precision": 1.0,
+      "recall": 0.85,
+      "f1-score": 0.918918918918919,
+      "support": 20.0
+    },
+    "reminder": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1-score": 0.8888888888888888,
+      "support": 20.0
+    },
+    "reminder_update": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "repeat": {
+      "precision": 0.8421052631578947,
+      "recall": 0.8,
+      "f1-score": 0.8205128205128205,
+      "support": 20.0
+    },
+    "replacement_card_duration": {
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1-score": 0.9,
+      "support": 20.0
+    },
+    "report_fraud": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1-score": 0.9473684210526315,
+      "support": 20.0
+    },
+    "report_lost_card": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "reset_settings": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "restaurant_reservation": {
+      "precision": 0.6153846153846154,
+      "recall": 0.8,
+      "f1-score": 0.6956521739130435,
+      "support": 20.0
+    },
+    "restaurant_reviews": {
+      "precision": 1.0,
+      "recall": 0.6,
+      "f1-score": 0.75,
+      "support": 20.0
+    },
+    "restaurant_suggestion": {
+      "precision": 0.7307692307692307,
+      "recall": 0.95,
+      "f1-score": 0.8260869565217391,
+      "support": 20.0
+    },
+    "rewards_balance": {
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "f1-score": 0.9090909090909091,
+      "support": 20.0
+    },
+    "roll_dice": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "rollover_401k": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "routing": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "schedule_maintenance": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1-score": 0.9473684210526315,
+      "support": 20.0
+    },
+    "schedule_meeting": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "share_location": {
+      "precision": 0.6206896551724138,
+      "recall": 0.9,
+      "f1-score": 0.7346938775510204,
+      "support": 20.0
+    },
+    "shopping_list": {
+      "precision": 0.8333333333333334,
+      "recall": 0.75,
+      "f1-score": 0.7894736842105263,
+      "support": 20.0
+    },
+    "shopping_list_update": {
+      "precision": 0.7777777777777778,
+      "recall": 0.7,
+      "f1-score": 0.7368421052631579,
+      "support": 20.0
+    },
+    "smart_home": {
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "f1-score": 0.9090909090909091,
+      "support": 20.0
+    },
+    "spelling": {
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1-score": 0.9523809523809523,
+      "support": 20.0
+    },
+    "spending_history": {
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1-score": 0.9523809523809523,
+      "support": 20.0
+    },
+    "sync_device": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1-score": 0.9473684210526315,
+      "support": 20.0
+    },
+    "taxes": {
+      "precision": 0.9047619047619048,
+      "recall": 0.95,
+      "f1-score": 0.926829268292683,
+      "support": 20.0
+    },
+    "tell_joke": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "text": {
+      "precision": 0.8947368421052632,
+      "recall": 0.85,
+      "f1-score": 0.8717948717948718,
+      "support": 20.0
+    },
+    "thank_you": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "time": {
+      "precision": 0.8260869565217391,
+      "recall": 0.95,
+      "f1-score": 0.8837209302325582,
+      "support": 20.0
+    },
+    "timer": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "timezone": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1-score": 0.9473684210526315,
+      "support": 20.0
+    },
+    "tire_change": {
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1-score": 0.975609756097561,
+      "support": 20.0
+    },
+    "tire_pressure": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "todo_list": {
+      "precision": 0.5652173913043478,
+      "recall": 0.65,
+      "f1-score": 0.6046511627906976,
+      "support": 20.0
+    },
+    "todo_list_update": {
+      "precision": 0.6818181818181818,
+      "recall": 0.75,
+      "f1-score": 0.7142857142857143,
+      "support": 20.0
+    },
+    "traffic": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "transactions": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1-score": 0.8888888888888888,
+      "support": 20.0
+    },
+    "transfer": {
+      "precision": 0.8260869565217391,
+      "recall": 0.95,
+      "f1-score": 0.8837209302325582,
+      "support": 20.0
+    },
+    "translate": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "travel_alert": {
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1-score": 0.9743589743589743,
+      "support": 20.0
+    },
+    "travel_notification": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1-score": 0.95,
+      "support": 20.0
+    },
+    "travel_suggestion": {
+      "precision": 0.9230769230769231,
+      "recall": 0.6,
+      "f1-score": 0.7272727272727273,
+      "support": 20.0
+    },
+    "uber": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "update_playlist": {
+      "precision": 0.9411764705882353,
+      "recall": 0.8,
+      "f1-score": 0.8648648648648649,
+      "support": 20.0
+    },
+    "user_name": {
+      "precision": 0.45161290322580644,
+      "recall": 0.7,
+      "f1-score": 0.5490196078431373,
+      "support": 20.0
+    },
+    "vaccines": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "w2": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1-score": 0.95,
+      "support": 20.0
+    },
+    "weather": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1-score": 0.95,
+      "support": 20.0
+    },
+    "what_are_your_hobbies": {
+      "precision": 0.9473684210526315,
+      "recall": 0.9,
+      "f1-score": 0.9230769230769231,
+      "support": 20.0
+    },
+    "what_can_i_ask_you": {
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "f1-score": 0.8,
+      "support": 20.0
+    },
+    "what_is_your_name": {
+      "precision": 0.4117647058823529,
+      "recall": 0.35,
+      "f1-score": 0.3783783783783784,
+      "support": 20.0
+    },
+    "what_song": {
+      "precision": 0.8181818181818182,
+      "recall": 0.9,
+      "f1-score": 0.8571428571428571,
+      "support": 20.0
+    },
+    "where_are_you_from": {
+      "precision": 0.7619047619047619,
+      "recall": 0.8,
+      "f1-score": 0.7804878048780488,
+      "support": 20.0
+    },
+    "whisper_mode": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "who_do_you_work_for": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1-score": 0.95,
+      "support": 20.0
+    },
+    "who_made_you": {
+      "precision": 0.7692307692307693,
+      "recall": 1.0,
+      "f1-score": 0.8695652173913043,
+      "support": 20.0
+    },
+    "yes": {
+      "precision": 0.8333333333333334,
+      "recall": 0.75,
+      "f1-score": 0.7894736842105263,
+      "support": 20.0
+    },
+    "accuracy": 0.891,
+    "macro avg": {
+      "precision": 0.8979163915521341,
+      "recall": 0.8909999999999999,
+      "f1-score": 0.8897534703470321,
+      "support": 3000.0
+    },
+    "weighted avg": {
+      "precision": 0.8979163915521341,
+      "recall": 0.891,
+      "f1-score": 0.889753470347032,
+      "support": 3000.0
+    }
+  }
+}
