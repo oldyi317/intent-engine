@@ -17,29 +17,35 @@ env/
 .env
 .env.local
 
-# Model files (too large for git, download at runtime)
-models/bert_intent_classifier/
+# BERT model files (too large for git, download at runtime via HF Hub)
+models/bert_intent/
 models/*.bin
 models/*.pt
 models/*.safetensors
 *.onnx
 
-# Data files (training data, databases — all excluded)
+# NOTE: svm_best.pkl, tfidf_vectorizer.pkl are KEPT in git (< 100MB)
+# They are required for the SVM layer to work on Render.
+
+# Data files (training data, databases)
 data/
 *.csv
 *.tsv
-*.json
 *.jsonl
 *.db
 *.sqlite
-*.pkl
 *.pickle
+
+# Keep specific JSON files needed by the app
+# (eval_report.json, bert_eval_report.json, bert_history.json, etc.)
+# So we do NOT use a blanket *.json rule here.
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+.history/
 
 # OS
 .DS_Store
@@ -51,3 +57,8 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Test / cache
+.pytest_cache/
+htmlcov/
+.coverage
