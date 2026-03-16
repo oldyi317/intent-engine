@@ -81,7 +81,7 @@ fubon_intent_project/
 
 ## Data
 
-> ⚠️ 本專案使用的資料集為富邦金控甄選提供，受保密協議約束，**不包含在此 Repository 中**。
+> ⚠️ 本專案使用的資料集受保密協議約束，**不包含在此 Repository 中**。
 
 資料規格：
 - 訓練集：15,000 筆（150 類 × 100 筆）
@@ -125,7 +125,7 @@ uvicorn app.main:app --reload --port 8000
 ```bash
 # 環境變數（在 Render Dashboard 設定）
 ANTHROPIC_API_KEY=your_key_here   # Claude API（可選，LLM 功能用）
-PYTHON_VERSION=3.11.6
+PYTHON_VERSION=3.12.12
 ```
 
 ## 技術架構
